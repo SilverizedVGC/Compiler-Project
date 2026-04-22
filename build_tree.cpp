@@ -18,8 +18,7 @@ public:
     virtual float evaluate() const = 0;
 };
 
-class NumberNode : public Node { // Python uses floats, not doubles
-// protected:
+class NumberNode : public Node { 
 public:
     // Hold numbers as floats for Python compatibility
     float value;
@@ -29,7 +28,6 @@ public:
 };
 
 class BinaryOpNode : public Node {
-// protected:
 public:
     string op;
     // Left and right child nodes for binary operations
@@ -49,7 +47,6 @@ public:
 };
 
 class UnaryOpNode : public Node {
-// protected:
 public:
     string op;
     // Child node for unary operations
@@ -67,7 +64,6 @@ public:
 };
 
 class VariableNode : public Node {
-// protected:
 public:
     // Variable name for variable nodes
     string name;
@@ -80,7 +76,6 @@ public:
 };
 
 class AssignmentNode : public Node {
-// protected:
 public:
     // Variable name and expression for assignment
     string variable_name;
@@ -97,16 +92,71 @@ public:
     }
 };
 
+class ProgramNode : public Node {
+public:
+    // List of statements in the program
+    vector<Node*> statements;
+public:
+    ProgramNode(const vector<Node*>& statements) : statements(statements) {}
+    ~ProgramNode() {
+        for (Node* stmt : statements) {
+            delete stmt;
+        }
+    }
+
+    float evaluate() const override {
+        // Placeholder for program evaluation, to be implemented later
+        return 0.0f;
+    }
+};
+
+void print_tree(const Node* node, int indent = 0) {
+    if (!node) return;
+
+    // Indent based on the level of the tree
+    for (int i = 0; i < indent; ++i) cout << "  ";
+
+    // Print the type of node
+    if (dynamic_cast<const ProgramNode*>(node)) {
+        const ProgramNode* prog_node = dynamic_cast<const ProgramNode*>(node);
+        cout << "Program" << endl;
+        for (Node* stmt : prog_node->statements) {
+            print_tree(stmt, indent + 1); // Print all statements inside the program
+        }
+    } else if (dynamic_cast<const NumberNode*>(node)) {
+        const NumberNode* num_node = dynamic_cast<const NumberNode*>(node);
+        cout << "Number: " << num_node->evaluate() << endl;
+    } else if (dynamic_cast<const VariableNode*>(node)) {
+        const VariableNode* var_node = dynamic_cast<const VariableNode*>(node);
+        cout << "Variable: " << var_node->name << endl;
+    } else if (dynamic_cast<const BinaryOpNode*>(node)) {
+        const BinaryOpNode* bin_node = dynamic_cast<const BinaryOpNode*>(node);
+        cout << "Binary Operation: " << bin_node->op << endl;
+        print_tree(bin_node->left, indent + 1); // Print left subtree
+        print_tree(bin_node->right, indent + 1); // Print right subtree
+    } else if (dynamic_cast<const UnaryOpNode*>(node)) {
+        const UnaryOpNode* unary_node = dynamic_cast<const UnaryOpNode*>(node);
+        cout << "Unary Operation" << endl;
+        print_tree(unary_node->operand, indent + 1); // Print operand subtree
+    } else if (dynamic_cast<const AssignmentNode*>(node)) {
+        const AssignmentNode* assign_node = dynamic_cast<const AssignmentNode*>(node);
+        cout << "Assignment: " << assign_node->variable_name << endl;
+        print_tree(assign_node->expression, indent + 1); // Print expression subtree
+    }
+}
+
 class Parser {
 private:
     const vector<Token>& tokens;
     size_t pos;
-// Get current token
+
+    // Get current token
     Token current_token() const {
         if (pos < tokens.size()) return tokens[pos];
         return Token("EOF", ""); // End of file token
     }
-// Advance to the next token
+
+    // Advance to the next token
     void advance() {
         if (pos < tokens.size()) pos++;
     }
@@ -115,9 +165,21 @@ public:
     // Parser class to build the syntax tree from tokens
     Parser(const vector<Token>& tokens) : tokens(tokens), pos(0) {}
 
+    // Parses the entire file/program and collects all statements
+    Node* parse_program() {
+        vector<Node*> stmts;
+        while (current_token().type != "EOF") {
+            Node* stmt = parse_statement();
+            if (stmt) {
+                stmts.push_back(stmt);
+            }
+        }
+        return new ProgramNode(stmts);
+    }
+
     // Handle assignments and expressions
     Node* parse_statement() {
-        // Verify if assingment
+        // Verify if assignment
         if (current_token().type == "identifier" && pos + 1 < tokens.size() && tokens[pos + 1].value == "=") {
             Token var_token = current_token(); // Get the variable token
             advance(); // Move past the identifier 
@@ -181,50 +243,22 @@ public:
             return expr; // Return the expression node
         }
 
-        cerr << "Error: Unexpected token in factor." << endl;
+        cerr << "Error: Unexpected token in factor: " << token.value << endl;
         advance(); // Move past the unexpected token
         return new NumberNode(0); // Return a default number node on error
     }
 };
 
-void print_tree(const Node* node, int indent = 0) {
-    if (!node) return;
-
-    // Indent based on the level of the tree
-    for (int i = 0; i < indent; ++i) cout << "  ";
-
-    // Print the type of node
-    if (dynamic_cast<const NumberNode*>(node)) {
-        const NumberNode* num_node = dynamic_cast<const NumberNode*>(node);
-        cout << "Number: " << num_node->evaluate() << endl;
-    } else if (dynamic_cast<const VariableNode*>(node)) {
-        const VariableNode* var_node = dynamic_cast<const VariableNode*>(node);
-        cout << "Variable: " << var_node->name << endl;
-    } else if (dynamic_cast<const BinaryOpNode*>(node)) {
-        const BinaryOpNode* bin_node = dynamic_cast<const BinaryOpNode*>(node);
-        cout << "Binary Operation: " << bin_node->op << endl;
-        print_tree(bin_node->left, indent + 1); // Print left subtree
-        print_tree(bin_node->right, indent + 1); // Print right subtree
-    } else if (dynamic_cast<const UnaryOpNode*>(node)) {
-        const UnaryOpNode* unary_node = dynamic_cast<const UnaryOpNode*>(node);
-        cout << "Unary Operation" << endl;
-        print_tree(unary_node->operand, indent + 1); // Print operand subtree
-    } else if (dynamic_cast<const AssignmentNode*>(node)) {
-        const AssignmentNode* assign_node = dynamic_cast<const AssignmentNode*>(node);
-        cout << "Assignment: " << assign_node->variable_name << endl;
-        print_tree(assign_node->expression, indent + 1); // Print expression subtree
-    }
-}
-
 void build_tree(const vector<Token>& tokens) {
     if (tokens.empty()) return;
 
     Parser parser(tokens); // Create a parser instance with the tokens
-    Node* root = parser.parse_statement(); // Parse the tokens to build the syntax tree
+    Node* root = parser.parse_program(); // Parse the program
 
     // Print Tree
-    cout << "Syntax tree built successfully." << endl;
+    cout << "\n--- Syntax Tree ---" << endl;
     print_tree(root); // Call the print_tree function to display the tree structure
+    
     // Clean up memory
     delete root; // Delete the root node to free memory
 }

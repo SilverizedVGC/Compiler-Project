@@ -45,10 +45,12 @@ int main(void) {
                 cout << token.type << ": " << token.value << endl;
             }
         }
-        build_tree(line_tokens); // Build the syntax tree for the current line's tokens
+        // build_tree(line_tokens); // Build the syntax tree for the current line's tokens
         // Append tokens from this line to our main list
         all_tokens.insert(all_tokens.end(), line_tokens.begin(), line_tokens.end());
     }
+    build_tree(all_tokens); // Build the syntax tree for all tokens collected from the file
+
     file.close();
 
     return 0;
