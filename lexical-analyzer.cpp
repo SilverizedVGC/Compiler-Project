@@ -15,6 +15,7 @@ public:
 vector<string> keywords = {"def", "return", "if", "else", "elif", "while", "for", "class", "True", "False", "None"};
 vector<string> punctuations = {"(", ")", "{", "}", "[", "]", ",", ":", ";", "."};
 vector<string> operators = {"+", "-", "*", "/", "=", "==", "!=", "<", ">", "<=", ">=", "**", "//", "%", "and", "or", "not"};
+vector<string> print_statements = {"print"};
 
 bool is_keyword(const string& token) {
     for (const string& keyword : keywords) {
@@ -61,6 +62,13 @@ bool is_valid_identifier(const string& token) {
 
     if (is_keyword(token)) return false; 
     return true;
+}
+
+bool is_print_statement(const string& token) {
+    for (const string& print_stmt : print_statements) {
+        if (token == print_stmt) return true;
+    }
+    return false;
 }
 
 vector<Token> lexical_analyzer(string code) {
@@ -139,6 +147,12 @@ vector<Token> lexical_analyzer(string code) {
             else type = "operator";
 
             tokens.push_back(Token(type, op));
+        } else if (is_print_statement(string(1, c))) {
+            string print_stmt(1, c);
+            while (i + 1 < code.size() && is_print_statement(print_stmt + code[i + 1])) {
+                print_stmt += code[++i];
+            }
+            tokens.push_back(Token("print_statement", print_stmt));
         } else {
             tokens.push_back(Token("invalid", string(1, c)));
         }
