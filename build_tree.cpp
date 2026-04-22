@@ -1,15 +1,55 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cstdlib>
+
 using namespace std;
 
-// Build syntax tree from tokens.
-// Operator precedence: PEMDAS (Parentheses, Exponents, Multiplication/Division, Addition/Subtraction)
+// Re-declare Token
+class Token {
+public:
+    string type;
+    string value;
+    Token(const string& type, const string& value) : type(type), value(value) {}
+};
 
-void build_tree(const vector<string>& tokens) {
-    // This function will take the list of tokens and build a syntax tree.
-    while (!tokens.empty()) {
-        
+class Node {
+public:
+    virtual ~Node() = default;
+    virtual float evaluate() const = 0;
+};
+
+class NumberNode : public Node { // Python uses floats, not doubles
+public:
+    // Hold numbers as floats for Python compatibility
+    float value;
+    NumberNode(float value) : value(value) {}
+    float evaluate() const override { return value; }
+};
+
+class BinaryOpNode : public Node {
+public:
+    // Left and right child nodes for binary operations
+    Node* left;
+    Node* right;
+    BinaryOpNode(Node* left, Node* right) : left(left), right(right) {}
+    ~BinaryOpNode() {
+        delete left;
+        delete right;
     }
+};
+
+class UnaryOpNode : public Node {
+public:
+    // Child node for unary operations
+    Node* operand;
+    UnaryOpNode(Node* operand) : operand(operand) {}
+    ~UnaryOpNode() {
+        delete operand;
+    }
+};
+
+void build_tree(const vector<Token>& tokens) {
+    if (tokens.empty()) return;
+
+    // Implementation logic will go here
 }
