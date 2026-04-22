@@ -131,7 +131,6 @@ vector<Token> lexical_analyzer(string code) {
                 op += code[++i];
             }
             
-            // Replaced invalid switch with if-else
             if (op == "+") type = "addition";
             else if (op == "-") type = "subtraction";
             else if (op == "*") type = "multiplication";
