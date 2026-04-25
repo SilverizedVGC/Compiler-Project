@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -12,10 +13,39 @@ public:
     Token(const string& type, const string& value) : type(type), value(value) {}
 };
 
+class CodeGenerator {
+private:
+    int temp_counter = 1;
+
+public:
+    vector<string> instructions;
+
+    // Generates t1, t2, t3...
+    string new_temp() {
+        return "t" + to_string(temp_counter++);
+    }
+
+    // Stores the formatted TAC instruction
+    void emit(const string& instruction) {
+        instructions.push_back(instruction);
+    }
+
+    // Prints the final output
+    void print_instructions() const {
+        cout << "\n--- Intermediate Representation (TAC) ---" << endl;
+        for (const string& instr : instructions) {
+            cout << instr << endl;
+        }
+    }
+};
+
 class Node {
 public:
     virtual ~Node() = default;
-    virtual float evaluate() const = 0;
+    virtual float evaluate() const = 0; // Your existing interpreter method
+    
+    // The code generation method
+    virtual string generate_ir(CodeGenerator& cg) const = 0; 
 };
 
 class NumberNode : public Node { 
@@ -25,6 +55,17 @@ public:
 public:
     NumberNode(float value) : value(value) {}
     float evaluate() const override { return value; }
+
+    string generate_ir(CodeGenerator& cg) const override {
+        // Simply load the number's value as a string
+        return to_string(value);
+    }
+
+    /*
+    string generate_asm() {
+        return;
+    }
+    */
 };
 
 class BinaryOpNode : public Node {
@@ -44,6 +85,23 @@ public:
         // Placeholder for binary operation evaluation, to be implemented later
         return 0.0f;
     }
+
+    // For code gen, we will need to generate code based on the operator and the left/right nodes
+    string generate_ir(CodeGenerator& cg) const override {
+        // 1. Traverse left and right children recursively (Post-order)
+        string left_val = left->generate_ir(cg);
+        string right_val = right->generate_ir(cg);
+
+        // 2. Get a new temp variable from the generator
+        string temp = cg.new_temp();
+
+        // 3. Emit the instruction (e.g., "t1 = 5 + 3")
+        cg.emit(temp + " = " + left_val + " " + op + " " + right_val);
+
+        // 4. Return the temp name so parent nodes can use it
+        return temp;
+    }
+    
 };
 
 class UnaryOpNode : public Node {
@@ -61,6 +119,20 @@ public:
         // Placeholder for unary operation evaluation, to be implemented later
         return 0.0f;
     }
+
+    string generate_ir(CodeGenerator& cg) const override {
+        // 1. Traverse the operand
+        string operand_val = operand->generate_ir(cg);
+
+        // 2. Get a new temp variable from the generator
+        string temp = cg.new_temp();
+
+        // 3. Emit the instruction (e.g., "t1 = -5")
+        cg.emit(temp + " = " + op + " " + operand_val);
+
+        // 4. Return the temp name so parent nodes can use it
+        return temp;
+    }
 };
 
 class VariableNode : public Node {
@@ -72,6 +144,11 @@ public:
     float evaluate() const override {
         // Placeholder for variable evaluation, to be implemented later
         return 0.0f;
+    }
+
+    string generate_ir(CodeGenerator& cg) const override {
+        // Return the variable name as a string
+        return name;
     }
 };
 
@@ -90,6 +167,17 @@ public:
         // Placeholder for assignment evaluation, to be implemented later
         return 0.0f;
     }
+
+    string generate_ir(CodeGenerator& cg) const override {
+        // 1. Traverse the expression on the right side of the equals sign
+        string expr_val = expression->generate_ir(cg);
+
+        // 2. Emit the final assignment to the actual variable name
+        cg.emit(variable_name + " = " + expr_val);
+
+        // 3. Return the variable name (or empty string, since assignment is the end of the line)
+        return variable_name; 
+    }
 };
 
 class ProgramNode : public Node {
@@ -107,6 +195,14 @@ public:
     float evaluate() const override {
         // Placeholder for program evaluation, to be implemented later
         return 0.0f;
+    }
+
+    string generate_ir(CodeGenerator& cg) const override {
+        // Loop through the vector of statement nodes and tell each one to generate
+        for (Node* stmt : statements) {
+            stmt->generate_ir(cg);
+        }
+        return "";
     }
 };
 
@@ -258,6 +354,12 @@ void build_tree(const vector<Token>& tokens) {
     // Print Tree
     cout << "\n--- Syntax Tree ---" << endl;
     print_tree(root); // Call the print_tree function to display the tree structure
+
+    // Print Intermediate Code
+    cout << "\n--- Intermediate Code ---" << endl;
+    CodeGenerator cg;
+    root->generate_ir(cg);
+    cg.print_instructions();
     
     // Clean up memory
     delete root; // Delete the root node to free memory
