@@ -151,8 +151,13 @@ vector<Token> token_convert(vector<Token> line_tokens) { // input is the same ty
                 //if of the form y = x + 5 
                 //y = x + x 
                 //y = 5 + x
-                tokens[i].value = tokens[i].value + " " + tokens[i-3].value + " " + tokens[i-2].value + " " + tokens[i+1].value; 
+                tokens[i].value = tokens[i].value + tokens[i-3].value + ", " + tokens[i-1].value + ", " + tokens[i+1].value;
                 //should nowbe in form ADD ttarget, tsource1, tsource2
+
+                tokens[i-3].value = ""; // Clear the target
+                tokens[i-2].value = ""; // Clear the equals
+                tokens[i-1].value = ""; // Clear the first source
+                tokens[i+1].value = ""; // Clear the second source
             }
             else if (i >= 1 && i + 1 < line_tokens.size()) {
                 tokens[i].value = tokens[i].value + " " + tokens[i-1].value + " " + tokens[i+1].value; 

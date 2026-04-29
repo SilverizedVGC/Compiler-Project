@@ -67,11 +67,13 @@ int main(int argc, char *argv[]) {
         build_tree(all_tokens); 
         vector<Token> converted_tokens = token_convert(all_tokens);
 
-        cout << "\n--- Assembly Token Stream ---" << endl;
+        cout << "\n--- Final Assembly Code ---" << endl;
         for (int i = 0; i < converted_tokens.size(); i++) {
-            cout << converted_tokens[i].value << " "; 
+            // Only print if the value isn't empty and it's not a leftover punctuation mark
+            if (converted_tokens[i].value != "" && converted_tokens[i].value != "(" && converted_tokens[i].value != ")") {
+                cout << converted_tokens[i].value << endl;
+            }
         }
-        cout << endl;
     }
     else {
         // Print syntax error tokens for debugging
