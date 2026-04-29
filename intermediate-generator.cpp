@@ -4,6 +4,7 @@
 #include <fstream>
 #include "C:\Users\Daniel\Downloads\Compiler-Project-main\Compiler-Project-main\lexical-analyzer.cpp"
 // replace directory with location of lexical-analyzer document when executing 
+
 //input is going to be the output of the lexical analyzer, which should just be
 vector<string> keywords = {"def", "return", "if", "else", "elif", "while", "for", "class", "True", "False", "None"};
 vector<string> punctuations = {"(", ")", "{", "}", "[", "]", ",", ":", ";", "."};
@@ -17,60 +18,82 @@ public:
     string value;
     Token(const string& type, const string& value) : type(type), value(value) {}
 };
-vector<Token> token_convert(vector<Token> line_tokens) // input is the same type as the output from lexical-analyzer.cpp. Additionally, pass # of lines as well to run while loop  
-// this class has 
-{
+vector<Token> token_convert(vector<Token> line_tokens) // input is the same type as the output from lexical-analyzer.cpp. 
+//value is the ACTUAL word, while type is just what kind of token it is 
+  { 
     vector<Token> tokens; //  new token dynamic array to hold converted values, then return at the end of the function 
-    int i = 0; 
-
+    int i = 0; //counter 
+    int tcounter = 0; // for  t registers in assembly (likel identifiers )
+    int rcounter = 0; // for r registers in assembly 
     //IDENTIFIER BLOCK 
     while(is_valid_identifier(line_tokens[i].type)) // roundabout way to check if there is a value stored at the token in the vector located at index i 
     {
-        if(is_keyword(line_tokens[i].type) )// if it is a keyword
+    
+        if(line_tokens[i].type == "keyword")// if it is a keyword
         // check which one and change to corresponding intermediate assembly, or close equivalent 
             {
-                tokens[i].value = i; 
-                if(line_tokens[i].type == "return") // would the equivalent just be jmp back? for now, just translate to JMP command 
+                tokens[i].type = "keyword";  //carry over type to new token incase 
+                if(line_tokens[i].value == "return") // would the equivalent just be jmp back? for now, just translate to JMP command 
                     {
-                        tokens[i].type = "JMP ";
+                        tokens[i].value = "JMP ";
                     }
-                else if(line_tokens[i].type == "def")
+                else if(line_tokens[i].value == "def")
                     {
-                        tokens[i].type = " ";
+                        tokens[i].value = " ";
                         //adding a space just so it doesn't count as NULL and skip the rest of the token due to printing later falsely claiming this is end
                         //possibly add flag to have token empty, but still count as part of translation? 
                     }
-                else if(line_tokens[i].type == "if" ||)
-                //if it is an if statement, scan ahead until you get to the end of the condition. Save the I value of those identifiers, and assign accordingly
+                else if(line_tokens[i].value == "if" || line_tokens[i].value == "elif" || line_tokens[i].value == "while")
+                //when it's an if statement, scan ahead until you get to the operator. Save the I value of those identifiers, and assign accordingly
                 //could potentially recursively call a function that assigns variables to assembly positons (t1,a2, etc etc)? 
                 //can make this if, elif, for potentially as well? just change the assignment of the identifier token based on the token following (if it is equal, not equal, greater than, etc)
-                for 
+                //just have it look ahead and print just the if,elif, for equivalent for now 
                     {
-                        tokens[i].type = "BEQ"; // using if = beq for now 
+                        //if statements in python can either just go straight to identifier and condition, or be enclosed in brackets. have to cover both cases 
+                        if(line_tokens[i+1].type == "punctuation" && line_tokens[i+2].type == "identifier" && line_tokens[i+3].type == "equals" || line_tokens[i+1].type == "identifier" && line_tokens[i+2].type == "equals") // 1st is case with parentheses, 2nd is without, so just identifier and equals 
+                        // 1st case is in the format:  if(a=)
+                            {
+                                tokens[i].value = "BEQ "; // branch if not equal, then later will scan for comparison variables 
+                            }
+                        else if(line_tokens[i+1].type == "punctuation" && line_tokens[i+2].type == "identifier" && line_tokens[i+3].type == "not_equals" || line_tokens[i+1].type == "identifier" && line_tokens[i+2].type == "not_equals") // if the 
+                            {
+                                 tokens[i].value = "BNE ";
+                            }
+                    }
+                else if(line_tokens[i].value == "for") 
+                //for loops in python defined as such 
+                // for i in range(number_here) 
+                //usually just BNE then? 
+                    {
+                        tokens[i].value = "BNE";
                     }
 
-
-                else if(line_tokens[i].type == "elif" || line_tokens[i].type == "while") 
+                else if(line_tokens[i].value == "class")
                     {
-                        tokens[i].type = "BEQ";
+                        tokens[i].value = " ";
+                            //add space as well, since assembly doesn't specifically have a class. just the identifier name and colon: 
                     }
-                else if(line_tokens[i].type == "for")
+                else if(line_tokens[i].value == "true")
+                //unsure what the direct conversion for this would be? 
+                //beq 1? just compare to 1?
                     {
-                        tokens[i].type = "BNE";
+                        tokens[i].value = "BEQ 1, ";
                     }
-                else if(line_tokens[i].type == "class")
+                else if(line_tokens[i].value == "false")
                     {
-                        tokens[i].type = "CLASS";
+                        tokens[i].value = "BEQ 0, ";
                     }
-                else if(line_tokens[i].type == "true")
+                  else if(line_tokens[i].value == "None")
                     {
-                        tokens[i].type = "TRUE";
+                        tokens[i].value = "BEQ 0, ";
                     }
             }
         //specifically for print command, since we have its identifier separate from  keyword token class 
-        else if(line_tokens[i].type == "print")
+        else if(line_tokens[i].type == "print_statement")
             {
-                tokens[i].type = "print ";
+                //printing in assembly usually involves moving it into a register, but since this is intermediate, i think we can just type print for now? 
+                tokens[i].value = "print ";
+                tokens[i].type == "print_statement";
             }
         else if(is_valid_identifier(line_tokens[i].type) ) 
             {
@@ -82,6 +105,15 @@ vector<Token> token_convert(vector<Token> line_tokens) // input is the same type
                 //function_name: 
                 //      continue_here 
             }
+        //PUNCUTATION BLOCK 
+
+
+        //IDENTIFIER BLOCK 
+
+
+        //OPERATOR BLOCK 
+
+        //
         
         //print converted intermediate token before moving onto next token translation 
         cout<<tokens[i].type<<endl; 
@@ -90,9 +122,6 @@ vector<Token> token_convert(vector<Token> line_tokens) // input is the same type
     return tokens; 
     //return tokens vector so it can be passed through to generate actual assembly 
 }
-        
-        
-
         
     
     //pass token here 
