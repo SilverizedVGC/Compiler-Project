@@ -24,8 +24,7 @@ vector<Token> token_convert(vector<Token> line_tokens) // input is the same type
     vector<Token> tokens; //  new token dynamic array to hold converted values, then return at the end of the function 
     int i = 0; //counter 
     int tcounter = 0; // for  t registers in assembly (likel identifiers )
-    int rcounter = 0; // for r registers in assembly 
-    //IDENTIFIER BLOCK 
+    //KEYWORDS BLOCK 
     while(is_valid_identifier(line_tokens[i].type)) // roundabout way to check if there is a value stored at the token in the vector located at index i 
     {
     
@@ -87,6 +86,11 @@ vector<Token> token_convert(vector<Token> line_tokens) // input is the same type
                     {
                         tokens[i].value = "BEQ 0, ";
                     }
+                    else
+                {
+                    cout<<"Error: Token identified as KEYWORD, but no applicable value"<<endl;
+                    return;
+                }
             }
         //specifically for print command, since we have its identifier separate from  keyword token class 
         else if(line_tokens[i].type == "print_statement")
@@ -106,29 +110,107 @@ vector<Token> token_convert(vector<Token> line_tokens) // input is the same type
                 //      continue_here 
             }
         //PUNCUTATION BLOCK 
+        else if(line_tokens[i].type == "punctuation") // if punctuation 
+        {
+            tokens[i].type = "punctuation";
+            if(line_tokens[i].value ==";")
+            {
+                tokens[i].value = " ";
+                    //assembly doesn't have semicolon ending, so just skip to printing and new line printing below 
+            }
+            else if(line_tokens[i].value ==".")
+            {
+                tokens[i].value = ".";
+            }
+            else if(line_tokens[i].value ==":")
+            {
+                tokens[i].value = ":";
+            }
+            else if(line_tokens[i].value ==",")
+            {
+                tokens[i].value = ",";
+            }
+            else if(line_tokens[i].value =="]")
+            {
+                tokens[i].value = "]";
+            }
+             else if(line_tokens[i].value =="[]")
+            {
+                tokens[i].value = "]";
+            }
+             else if(line_tokens[i].value =="}")
+            {
+                tokens[i].value = "}";
+            }
+             else if(line_tokens[i].value =="{")
+            {
+                tokens[i].value = "{";
+            }
+             else if(line_tokens[i].value =="(")
+            {
+                tokens[i].value = "(";
+            }
+             else if(line_tokens[i].value ==")")
+            {
+                tokens[i].value = ")";
+            }
+            else
+                {
+                    cout<<"Error: Token identified as PUNCTUATION, but no applicable value"<<endl;
+                    return;
+                }
+            
+        }
+        //OPERATOR BLOCK 
+         else if(line_tokens[i].type == "operator") 
+         {
+            //because of the way assembly prints out operations, will likely assign the value, then have to look behind and ahead of the operators to deduce which is the source and target 
+            //ex - y = x + 5 would have to be ADD ty, tx, 5, so by the time it scans th eplus, you have to look back at the previous 3 operators in this case. 
+            //this means more conditions have to be checked for each of these 
+            //to avoid writing the same checks everytime, likely will run through if else statements, then exit if else statement and then run checks for operators 
+             if(line_tokens[i].value == "+") 
+                {
+                    tokens[i].value = "ADD ";//no new line; identifier registers should follow, only after 2nd operator is added should 
+                    cout<<tokens[i].value;
+                }
+                else if(line_tokens[i].value == "-") 
+                    {
+                        tokens[i].value = "SUB ";
+                    }
+                else if(line_tokens[i].value == "*") 
+                    {
+                        tokens[i].value = "MUlT ";
+                    }
+            //should have token assigned now, so you can check behind and infront 
+            //y = x + 5 
+            if ((line_tokens[i-1].type == "identifier" || line_tokens[i-1].type == "number") && line_tokens[i-2].value == "=" && (line_tokens[i-3].type == "identifier" ||line_tokens[i-3].type == "number") &&(line_tokens[i+1].type == "identifier" ||line_tokens[i+1].type == "number") )
+            {
+                //if of the form y = x + 5 
+                //y = x + x 
+                //y = 5 + x
+                cout<< tokens[i].value, " ", tokens[i-3].value, tokens[i-2].value, tokens[i+1].value,"\n"; 
+                //should nowbe in form ADD ttarget, tsource1, tsource2
+            }
+            else
+            {
+                cout<< tokens[i].value, " ", tokens[i-1].value, tokens[i+1].value,"\n"; 
+                //for mult, since that only has two operands 
+            }
 
+         }
 
         //IDENTIFIER BLOCK 
+        else if(line_tokens[i].type == "identifier") 
+         {
+             tokens[i].type = "identifier";
+           tokens[i].value = "t" + tcounter; 
+           cout<<tokens[i].value;
+           tcounter++;
+         }
 
-
-        //OPERATOR BLOCK 
-
-        //
         
         //print converted intermediate token before moving onto next token translation 
-        cout<<tokens[i].type<<endl; 
         i++; 
     }   
     return tokens; 
-    //return tokens vector so it can be passed through to generate actual assembly 
 }
-        
-    
-    //pass token here 
-    // scan what type of token, and assign assembly equivalent based on the token
-    //if number, pass it through
-    //for different registers, use a counting variable and assign it 
-    // print? 
-
-
-
