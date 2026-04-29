@@ -1,31 +1,19 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include "compiler.h"
 
-using namespace std;
+// The class definition is in compiler.h. Here we just define what the functions actually DO.
+CodeGenerator::CodeGenerator() : temp_counter(1) {}
 
-class CodeGenerator {
-private:
-    int temp_counter = 1;
+string CodeGenerator::new_temp() {
+    return "t" + to_string(temp_counter++);
+}
 
-public:
-    vector<string> instructions;
+void CodeGenerator::emit(const string& instruction) {
+    instructions.push_back(instruction);
+}
 
-    // Generates t1, t2, t3...
-    string new_temp() {
-        return "t" + to_string(temp_counter++);
+void CodeGenerator::print_instructions() const {
+    cout << "\n--- Intermediate Representation (TAC) ---" << endl;
+    for (const string& instr : instructions) {
+        cout << instr << endl;
     }
-
-    // Stores the formatted TAC instruction
-    void emit(const string& instruction) {
-        instructions.push_back(instruction);
-    }
-
-    // Prints the final output
-    void print_instructions() const {
-        cout << "\n--- Intermediate Representation (TAC) ---" << endl;
-        for (const string& instr : instructions) {
-            cout << instr << endl;
-        }
-    }
-};
+}

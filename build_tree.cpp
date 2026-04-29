@@ -1,19 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include "compiler.h"
 #include <stack>
 
-using namespace std;
-
-// Re-declare Token
-class Token {
-public:
-    string type;
-    string value;
-    Token(const string& type, const string& value) : type(type), value(value) {}
-};
-
-class CodeGenerator {
+class ASM_Generator {
 private:
     int temp_counter = 1;
 
@@ -32,7 +20,7 @@ public:
 
     // Prints the final output
     void print_instructions() const {
-        cout << "\n--- Intermediate Representation (TAC) ---" << endl;
+        cout << "\n--- Assembly Code ---" << endl;
         for (const string& instr : instructions) {
             cout << instr << endl;
         }
@@ -356,7 +344,6 @@ void build_tree(const vector<Token>& tokens) {
     print_tree(root); // Call the print_tree function to display the tree structure
 
     // Print Intermediate Code
-    cout << "\n--- Intermediate Code ---" << endl;
     CodeGenerator cg;
     root->generate_ir(cg);
     cg.print_instructions();

@@ -1,18 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include "compiler.h" // Includes Token, vector, string, iostream
 #include <fstream>
 
-using namespace std;
-
-// Forward declaration of the Token class and functions
-class Token {
-public:
-    string type;
-    string value;
-    Token(const string& type, const string& value) : type(type), value(value) {}
-};
-
+// Error class stays here since it's only used in main
 class Error {
 public:
     Token token;
@@ -20,14 +9,19 @@ public:
     Error(const Token& token, int line_number) : token(token), line_number(line_number) {}
 };
 
-vector<Token> lexical_analyzer(string code);
-void build_tree(const vector<Token>& tokens);
-
-int main(void) {
+int main(int argc, char *argv[]) {
     bool syntax_error = false;
     string filename;
-    cout << "Enter the filename of the Python code: ";
-    cin >> filename;
+
+    if (argc == 1)
+    {
+        cout << "Enter the filename of the Python code: ";
+        cin >> filename;
+    }
+    else
+    {
+        filename = argv[1];
+    }
     
     ifstream file(filename);
     if (!file.is_open()) {
@@ -68,7 +62,17 @@ int main(void) {
         // Append tokens to our main list
         all_tokens.insert(all_tokens.end(), line_tokens.begin(), line_tokens.end());
     }
-    if (!syntax_error) build_tree(all_tokens); // Build the syntax tree for all tokens collected from the file if no syntax errors
+    if (!syntax_error) 
+    { 
+        build_tree(all_tokens); 
+        vector<Token> converted_tokens = token_convert(all_tokens);
+
+        cout << "\n--- Assembly Token Stream ---" << endl;
+        for (int i = 0; i < converted_tokens.size(); i++) {
+            cout << converted_tokens[i].value << " "; 
+        }
+        cout << endl;
+    }
     else {
         // Print syntax error tokens for debugging
         cout << "\n--- Syntax Errors Detected ---" << endl;

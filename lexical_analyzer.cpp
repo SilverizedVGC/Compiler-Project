@@ -1,17 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include "compiler.h"
 #include <cctype>
 
-using namespace std;
-
-class Token {
-public:
-    string type;
-    string value;
-    Token(const string& type, const string& value) : type(type), value(value) {}
-};
-
+// Define the global vectors here. Because of "extern" in compiler.h, other files can now use these.
 vector<string> keywords = {"def", "return", "if", "else", "elif", "while", "for", "class", "True", "False", "None"};
 vector<string> punctuations = {"(", ")", "{", "}", "[", "]", ",", ":", ";", "."};
 vector<string> operators = {"+", "-", "*", "/", "=", "==", "!=", "<", ">", "<=", ">=", "**", "//", "%", "and", "or", "not"};
