@@ -1,6 +1,9 @@
 #include "compiler.h"
 #include <stack>
 
+vector<string> symbol_names;
+vector<float> symbol_values;
+
 class ASM_Generator {
 private:
     int temp_counter = 1;
@@ -70,7 +73,13 @@ public:
     }
 
     float evaluate() const override {
-        // Placeholder for binary operation evaluation, to be implemented later
+        float left_val = left->evaluate();
+        float right_val = right->evaluate();
+
+        if (op == "+") return left_val + right_val;
+        if (op == "-") return left_val - right_val;
+        if (op == "*") return left_val * right_val;
+        if (op == "/") return (right_val != 0) ? left_val / right_val : 0.0f; // Basic div by zero check
         return 0.0f;
     }
 
@@ -104,8 +113,9 @@ public:
     }
 
     float evaluate() const override {
-        // Placeholder for unary operation evaluation, to be implemented later
-        return 0.0f;
+        float val = operand->evaluate();
+        if (op == "-") return -val;
+        return val;
     }
 
     string generate_ir(CodeGenerator& cg) const override {
@@ -129,9 +139,15 @@ public:
     string name;
 public:
     VariableNode(const string& name) : name(name) {}
+
     float evaluate() const override {
-        // Placeholder for variable evaluation, to be implemented later
-        return 0.0f;
+        for (size_t i = 0; i < symbol_names.size(); ++i) {
+                if (symbol_names[i] == name) {
+                    return symbol_values[i];
+                }
+            }
+            cerr << "Runtime Error: Undefined variable " << name << endl;
+            return 0.0f;
     }
 
     string generate_ir(CodeGenerator& cg) const override {
@@ -152,8 +168,20 @@ public:
     }
 
     float evaluate() const override {
-        // Placeholder for assignment evaluation, to be implemented later
-        return 0.0f;
+        float val = expression->evaluate();
+        
+        // Linear search for existing variable
+        for (size_t i = 0; i < symbol_names.size(); ++i) {
+            if (symbol_names[i] == variable_name) {
+                symbol_values[i] = val;
+                return val;
+            }
+        }
+        
+        // If not found, add new variable
+        symbol_names.push_back(variable_name);
+        symbol_values.push_back(val);
+        return val;
     }
 
     string generate_ir(CodeGenerator& cg) const override {
@@ -181,8 +209,11 @@ public:
     }
 
     float evaluate() const override {
-        // Placeholder for program evaluation, to be implemented later
-        return 0.0f;
+        float last_val = 0.0f;
+        for (Node* stmt : statements) {
+            last_val = stmt->evaluate();
+        }
+        return last_val; // Returns the result of the last line executed
     }
 
     string generate_ir(CodeGenerator& cg) const override {
